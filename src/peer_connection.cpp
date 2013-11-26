@@ -193,6 +193,7 @@ namespace libtorrent
 		, m_ignore_stats(false)
 		, m_corked(false)
 		, m_has_metadata(true)
+                , votes(0)
 #if defined TORRENT_DEBUG || TORRENT_RELEASE_ASSERTS
 		, m_in_constructor(true)
 		, m_disconnect_started(false)
@@ -321,6 +322,22 @@ namespace libtorrent
 		// prioritize the one that has waited the longest to be unchoked
 		return m_last_unchoke < rhs.m_last_unchoke;
 	}
+
+  int peer_connection::get_total_payload_download() {
+    return m_statistics.total_payload_upload();
+  }
+
+    bool peer_connection::payload_download_compare(boost::intrusive_ptr<peer_connection const> const& p) const {
+        TORRENT_ASSERT(p);
+        peer_connection const& rhs = *p;
+
+#if defined TORRENT_VERBOSE_LOGGING
+        (*m_ses.m_logger) << time_now_string() << " " << "payload_download_compare" << "\n";
+#endif
+
+        return (m_statistics.total_payload_upload() > rhs.m_statistics.total_payload_upload());
+    }
+
 
 	bool peer_connection::unchoke_compare(boost::intrusive_ptr<peer_connection const> const& p) const
 	{

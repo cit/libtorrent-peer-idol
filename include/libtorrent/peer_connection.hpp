@@ -118,7 +118,7 @@ namespace libtorrent
 		// unexpectedly from the peer
 		bool not_wanted:1;
 		bool timed_out:1;
-		
+
 		// the busy flag is set if the block was
 		// requested from another peer when this
 		// request was queued. We only allow a single
@@ -264,7 +264,7 @@ namespace libtorrent
 		// this adds an announcement in the announcement queue
 		// it will let the peer know that we have the given piece
 		void announce_piece(int index);
-		
+
 		// this will tell the peer to announce the given piece
 		// and only allow it to request that piece
 		void superseed_piece(int replace_piece, int new_piece);
@@ -371,13 +371,13 @@ namespace libtorrent
 		// attempted to connect yet (i.e. it's queued for
 		// connection attempt).
 		bool is_queued() const { return m_queued; }
-	
+
 		// called when it's time for this peer_conncetion to actually
 		// initiate the tcp connection. This may be postponed until
 		// the library isn't using up the limitation of half-open
-		// tcp connections.	
+		// tcp connections.
 		void on_connect(int ticket);
-		
+
 		// This is called for every peer right after the upload
 		// bandwidth has been distributed among them
 		// It will reset the used bandwidth to 0.
@@ -428,6 +428,14 @@ namespace libtorrent
 		// for which one is more eligible for an unchoke.
 		// returns true if this is more eligible
 		bool unchoke_compare(boost::intrusive_ptr<peer_connection const> const& p) const;
+
+                // PEER_IDOL
+                int get_total_payload_download();
+                bool payload_download_compare(boost::intrusive_ptr<peer_connection const> const& p) const;
+
+                // peer idol votes
+                int votes;
+
 		bool upload_rate_compare(peer_connection const* p) const;
 
 		// resets the byte counters that are used to measure
@@ -471,7 +479,7 @@ namespace libtorrent
 		void incoming_cancel(peer_request const& r);
 
 		void incoming_dht_port(int listen_port);
-		
+
 		void incoming_reject_request(peer_request const& r);
 		void incoming_have_all();
 		void incoming_have_none();
@@ -573,7 +581,7 @@ namespace libtorrent
 
 		virtual void append_const_send_buffer(char const* buffer, int size);
 
-#ifndef TORRENT_DISABLE_RESOLVE_COUNTRIES	
+#ifndef TORRENT_DISABLE_RESOLVE_COUNTRIES
 		void set_country(char const* c)
 		{
 			TORRENT_ASSERT(strlen(c) == 2);
@@ -640,13 +648,13 @@ namespace libtorrent
 		virtual void write_keepalive() = 0;
 		virtual void write_piece(peer_request const& r, disk_buffer_holder& buffer) = 0;
 		virtual void write_suggest(int piece) = 0;
-		
+
 		virtual void write_reject_request(peer_request const& r) = 0;
 		virtual void write_allow_fast(int piece) = 0;
 
 		virtual void on_connected() = 0;
 		virtual void on_tick() {}
-	
+
 		virtual void on_receive(error_code const& error
 			, std::size_t bytes_transferred) = 0;
 		virtual void on_sent(error_code const& error
@@ -669,7 +677,7 @@ namespace libtorrent
 
 		std::pair<buffer::interval, buffer::interval> wr_recv_buffers(int bytes);
 #endif
-		
+
 		buffer::const_interval receive_buffer() const
 		{
 			if (m_recv_buffer.empty())
@@ -741,7 +749,7 @@ namespace libtorrent
 		extension_list_t m_extensions;
 #endif
 
-#ifndef TORRENT_DISABLE_RESOLVE_COUNTRIES	
+#ifndef TORRENT_DISABLE_RESOLVE_COUNTRIES
 		// in case the session settings is set
 		// to resolve countries, this is set to
 		// the two character country code this
@@ -754,6 +762,7 @@ namespace libtorrent
 			TORRENT_ASSERT(!m_in_constructor);
 			return boost::intrusive_ptr<peer_connection>(this);
 		}
+
 
 	private:
 
@@ -855,7 +864,7 @@ namespace libtorrent
 		// it may not necessarily be the peer we're
 		// connected to, in case we use a proxy
 		tcp::endpoint m_remote;
-		
+
 		// this is the torrent this connection is
 		// associated with. If the connection is an
 		// incoming connection, this is set to zero
@@ -877,11 +886,11 @@ namespace libtorrent
 		// the blocks we have reserved in the piece
 		// picker and will request from this peer.
 		std::vector<pending_block> m_request_queue;
-		
+
 		// the queue of blocks we have requested
 		// from this peer
 		std::vector<pending_block> m_download_queue;
-		
+
 		// the pieces we will send to the peer
 		// if requested (regardless of choke state)
 		std::vector<int> m_accept_fast;
@@ -960,7 +969,7 @@ namespace libtorrent
 		// from disk, that will be added to the send
 		// buffer as soon as they complete
 		int m_reading_bytes;
-		
+
 		// the number of invalid piece-requests
 		// we have got from this peer. If the request
 		// queue gets empty, and there have been
@@ -1001,7 +1010,7 @@ namespace libtorrent
 		int m_superseed_piece[2];
 
 		// bytes downloaded since last second
-		// timer timeout; used for determining 
+		// timer timeout; used for determining
 		// approx download rate
 		int m_remote_bytes_dled;
 
@@ -1035,7 +1044,7 @@ namespace libtorrent
 		// will be used to determine if whole pieces
 		// are preferred.
 		boost::uint8_t m_prefer_whole_pieces;
-		
+
 		// the number of request we should queue up
 		// at the remote end.
 		boost::uint8_t m_desired_queue_size;
@@ -1054,7 +1063,7 @@ namespace libtorrent
 		// reconnect to this peer is shorter, and likely
 		// immediate.
 		bool m_fast_reconnect:1;
-		
+
 		// is true if it was we that connected to the peer
 		// and false if we got an incoming connection
 		// could be considered: true = local, false = remote
@@ -1126,7 +1135,7 @@ namespace libtorrent
 		// at a time.
 		bool m_request_large_blocks:1;
 
-		// set to true if this peer is in share mode		
+		// set to true if this peer is in share mode
 		bool m_share_mode:1;
 
 		// set to true when this peer is only uploading
@@ -1277,4 +1286,3 @@ namespace libtorrent
 }
 
 #endif // TORRENT_PEER_CONNECTION_HPP_INCLUDED
-

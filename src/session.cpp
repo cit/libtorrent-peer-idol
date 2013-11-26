@@ -50,6 +50,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #pragma warning(pop)
 #endif
 
+#include "libtorrent/extensions/peer_idol.hpp"
 #include "libtorrent/extensions/ut_pex.hpp"
 #include "libtorrent/extensions/ut_metadata.hpp"
 #include "libtorrent/extensions/lt_trackers.hpp"
@@ -403,6 +404,7 @@ namespace libtorrent
 #ifndef TORRENT_DISABLE_EXTENSIONS
 		if (flags & add_default_plugins)
 		{
+                        add_extension(create_peer_idol_plugin);
 			add_extension(create_ut_pex_plugin);
 			add_extension(create_ut_metadata_plugin);
 			add_extension(create_lt_trackers_plugin);
