@@ -1014,7 +1014,9 @@ namespace libtorrent
 		// to. Move the log file into its directory
 
 		error_code ec;
-		std::string log_name = combine_path(to_hex(ih.to_string())
+                std::string dir_infohash_local_ip = combine_path(to_hex(ih.to_string()), print_endpoint(m_socket->local_endpoint(ec)));
+
+		std::string log_name = combine_path(dir_infohash_local_ip
 			, m_remote.address().to_string(ec) + "_"
 				+ to_string(m_remote.port()).elems);
 		m_logger->move_log_file(m_ses.get_log_path(), log_name, m_ses.listen_port());
