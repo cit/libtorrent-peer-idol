@@ -1133,7 +1133,7 @@ namespace libtorrent
 		, max_failcount(3)
 		, min_reconnect_time(60)
 		, peer_connect_timeout(15)
-		, ignore_limits_on_local_network(true)
+		, ignore_limits_on_local_network(false)
 		, connection_speed(6)
 		, send_redundant_have(true)
 		, lazy_bitfields(true)
