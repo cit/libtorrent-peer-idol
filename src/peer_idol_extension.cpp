@@ -195,6 +195,7 @@ namespace libtorrent {
                     (*m_torrent.session().m_logger) << time_now_string() << " --------------------------- (idol)\n";
 #endif
 
+                return true;
             }
 
                     int m_peer_idol_extension_id;
