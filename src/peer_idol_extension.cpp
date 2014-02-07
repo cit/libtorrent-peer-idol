@@ -70,10 +70,11 @@ namespace libtorrent {
                     return;
 
 #if defined TORRENT_VERBOSE_LOGGING || defined TORRENT_LOGGING || defined TORRENT_ERROR_LOGGING
-                (*m_torrent.session().m_logger) << time_now_string() << " PEER_IDOL ACTIVATED (tick) " << m_pc.remote().address() << "\n";
+                (*m_torrent.session().m_logger) << time_now_string() << " [peer_idol] activated (tick) " << m_pc.remote().address() << "\n";
 #endif
                 // only send the votes to the seeder
-                if (m_pc.is_seed()) {
+                if (m_pc.is_seed() &&
+                    m_torrent.settings().seed_choking_algorithm == session_settings::peer_idol) {
                     send_best_peers();
                 }
 
