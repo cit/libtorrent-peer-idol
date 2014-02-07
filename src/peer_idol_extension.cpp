@@ -94,7 +94,14 @@ namespace libtorrent {
                 for (torrent::peer_iterator i = m_torrent.begin(),
                          end(m_torrent.end()); i != end; ++i) {
                     peer_connection* peer = *i;
-                    peers.push_back(peer);
+                    if (!peer->is_seed()) {
+                        peers.push_back(peer);
+                    }
+                    else {
+#if defined TORRENT_VERBOSE_LOGGING || defined TORRENT_LOGGING || defined TORRENT_ERROR_LOGGING
+                        (*m_torrent.session().m_logger) << time_now_string() << " [peer_idol]" << " ignoring " << peer->remote() << " because it is a seeder\n";
+#endif
+                    }
                 }
 
                 // sort all peers according to their upload rate
