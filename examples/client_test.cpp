@@ -626,11 +626,11 @@ void add_torrent(libtorrent::session& ses
     if (share_mode) p.flags |= add_torrent_params::flag_share_mode;
     lazy_entry resume_data;
 
-    std::string filename = combine_path(save_path, combine_path(".resume", to_hex(t->info_hash().to_string()) + ".resume"));
+    // std::string filename = combine_path(save_path, combine_path(".resume", to_hex(t->info_hash().to_string()) + ".resume"));
 
-    std::vector<char> buf;
-    if (load_file(filename.c_str(), buf, ec) == 0)
-        p.resume_data = &buf;
+    // std::vector<char> buf;
+    // if (load_file(filename.c_str(), buf, ec) == 0)
+    //     p.resume_data = &buf;
 
     p.ti = t;
     p.save_path = save_path;
@@ -900,7 +900,7 @@ bool handle_alert(libtorrent::session& ses, libtorrent::alert* a
         {
             std::vector<char> out;
             bencode(std::back_inserter(out), *p->resume_data);
-            save_file(combine_path(h.save_path(), combine_path(".resume", to_hex(h.info_hash().to_string()) + ".resume")), out);
+            // save_file(combine_path(h.save_path(), combine_path(".resume", to_hex(h.info_hash().to_string()) + ".resume")), out);
             if (h.is_valid()
                 && non_files.find(h) == non_files.end()
                 && std::find_if(files.begin(), files.end()
@@ -1150,6 +1150,8 @@ int main(int argc, char* argv[]) {
 
 	using namespace libtorrent;
 	session_settings settings;
+
+
 
 	proxy_settings ps;
 
@@ -2504,7 +2506,7 @@ int main(int argc, char* argv[]) {
 			torrent_handle h = rd->handle;
 			std::vector<char> out;
 			bencode(std::back_inserter(out), *rd->resume_data);
-			save_file(combine_path(h.save_path(), combine_path(".resume", to_hex(h.info_hash().to_string()) + ".resume")), out);
+			// save_file(combine_path(h.save_path(), combine_path(".resume", to_hex(h.info_hash().to_string()) + ".resume")), out);
 		}
 	}
 
