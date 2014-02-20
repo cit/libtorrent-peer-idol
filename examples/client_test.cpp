@@ -1243,6 +1243,19 @@ int main(int argc, char* argv[]) {
 		char const* arg = argv[i+1];
 		switch (argv[i][1])
 		{
+                case 'g':
+                    if (strcmp(arg, "peer_idol") == 0)
+                        settings.seed_choking_algorithm = session_settings::peer_idol;
+                    else if (strcmp(arg, "round_robin") == 0)
+                        settings.seed_choking_algorithm = session_settings::round_robin;
+                    else if (strcmp(arg, "fastest_upload") == 0)
+                        settings.seed_choking_algorithm = session_settings::fastest_upload;
+                    else if (strcmp(arg, "anti_leech") == 0)
+                        settings.seed_choking_algorithm = session_settings::anti_leech;
+                    else if (strcmp(arg, "longest_wait") == 0)
+                        settings.seed_choking_algorithm = session_settings::longest_wait;
+
+                    break;
 			case 'f': g_log_file = fopen(arg, "w+"); break;
 			case 'o': settings.half_open_limit = atoi(arg); break;
 			case 'h': settings.allow_multiple_connections_per_ip = true; --i; break;
