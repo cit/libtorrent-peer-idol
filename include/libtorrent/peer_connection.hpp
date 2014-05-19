@@ -435,12 +435,16 @@ namespace libtorrent
 
                 // peer idol votes
                 int votes;
+                int const get_votes() const { return votes; }
+                int no_of_consecutive_unchokes;
 
 		bool upload_rate_compare(peer_connection const* p) const;
 
 		// resets the byte counters that are used to measure
 		// the number of bytes transferred within unchoke cycles
 		void reset_choke_counters();
+
+                void set_last_unchoke_time();
 
 		// if this peer connection is useless (neither party is
 		// interested in the other), disconnect it
