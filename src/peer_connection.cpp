@@ -539,7 +539,7 @@ namespace libtorrent
                     int ranking[] = {0, 10, -1, 0, 0, 0, 0, 0, 0};
 
                     if (no_of_consecutive_unchokes != rhs.no_of_consecutive_unchokes) {
-                        return foo[no_of_consecutive_unchokes] > foo[rhs.no_of_consecutive_unchokes];
+                        return ranking[no_of_consecutive_unchokes] > ranking[rhs.no_of_consecutive_unchokes];
                     }
 
                     // if both peers have are still in their send quota or not in their send quota
