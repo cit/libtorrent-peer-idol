@@ -486,7 +486,7 @@ namespace aux {
 
 #ifndef TORRENT_DISABLE_ENCRYPTION
 #define TORRENT_SETTING(t, x) {#x, offsetof(pe_settings,x), t},
-	bencode_map_entry pe_settings_map[] = 
+	bencode_map_entry pe_settings_map[] =
 	{
 		TORRENT_SETTING(integer, out_enc_policy)
 		TORRENT_SETTING(integer, in_enc_policy)
@@ -559,7 +559,7 @@ namespace aux {
 	{
 		session_impl* ses = (session_impl*)arg;
 		const char* servername = SSL_get_servername(s, TLSEXT_NAMETYPE_host_name);
-	
+
 		if (!servername || strlen(servername) < 40)
 			return SSL_TLSEXT_ERR_ALERT_FATAL;
 
@@ -798,7 +798,7 @@ namespace aux {
 		}
 		else if (windows_version >= 0x050102)
 		{
-			// on XP SP2 the limit is 10	
+			// on XP SP2 the limit is 10
 			m_half_open.limit(9);
 		}
 		else
@@ -1134,7 +1134,7 @@ namespace aux {
 			return;
 		}
 		m_last_log_rotation = time_now();
-			
+
 		fputs("second:uploaded bytes:downloaded bytes:downloading torrents:seeding torrents"
 			":peers:connecting peers:disk block buffers:num list peers"
 			":peer allocations:peer storage bytes"
@@ -1451,7 +1451,7 @@ namespace aux {
 		}
 #endif
 	}
-	
+
 	void session_impl::set_proxy(proxy_settings const& s)
 	{
 		TORRENT_ASSERT(is_network_thread());
@@ -1468,7 +1468,7 @@ namespace aux {
 		TORRENT_ASSERT(is_network_thread());
 
 		lazy_entry const* settings;
-	  
+
 		if (e->type() != lazy_entry::dict_t) return;
 
 		for (int i = 0; i < int(sizeof(all_settings)/sizeof(all_settings[0])); ++i)
@@ -1478,7 +1478,7 @@ namespace aux {
 			if (!settings) continue;
 			load_struct(*settings, reinterpret_cast<char*>(this) + c.offset, c.map, c.num_entries);
 		}
-		
+
 		update_rate_settings();
 		update_connections_limit();
 		update_unchoke_limit();
@@ -1760,7 +1760,7 @@ namespace aux {
 			if (t.should_check_files()) t.queue_torrent_check();
 		}
 	}
-	
+
 	void session_impl::abort()
 	{
 		TORRENT_ASSERT(is_network_thread());
@@ -1976,6 +1976,9 @@ namespace aux {
 
 		if (m_settings.choking_algorithm != s.choking_algorithm)
 		{
+#if defined TORRENT_VERBOSE_LOGGING || defined TORRENT_LOGGING || defined TORRENT_ERROR_LOGGING
+                    (*m_logger) << time_now_string() << " [recalculate_unchoke_slots] set m_unchoke_timer_scaler = 0\n";
+#endif
 			// trigger recalculation of the unchoked peers
 			m_unchoke_time_scaler = 0;
 		}
@@ -2055,7 +2058,7 @@ namespace aux {
 
 		if (connections_limit_changed) update_connections_limit();
 		if (unchoke_limit_changed) update_unchoke_limit();
-	
+
 		// enable anonymous mode. We don't want to accept any incoming
 		// connections, except through a proxy.
 		if (anonymous)
@@ -2076,7 +2079,7 @@ namespace aux {
 			m_listen_sockets.clear();
 		}
  		if (m_settings.connection_speed < 0) m_settings.connection_speed = 200;
- 
+
 		if (update_disk_io_thread)
 			update_disk_thread_settings();
 
@@ -2204,7 +2207,7 @@ namespace aux {
 			, print_endpoint(ep).c_str(), s->external_port);
 #endif
 	}
-	
+
 	void session_impl::open_listen_port(int flags, error_code& ec)
 	{
 		TORRENT_ASSERT(is_network_thread());
@@ -2230,12 +2233,12 @@ retry:
 		tcp::endpoint ssl_interface = m_listen_interface;
 		ssl_interface.port(m_settings.ssl_listen);
 #endif
-	
+
 		if (is_any(m_listen_interface.address()))
 		{
 			// this means we should open two listen sockets
 			// one for IPv4 and one for IPv6
-		
+
 			listen_socket_t s;
 			setup_listener(&s, tcp::endpoint(address_v4::any(), m_listen_interface.port())
 				, m_listen_port_retries, false, flags, ec);
@@ -2426,7 +2429,7 @@ retry:
 			&& m_proxy.type != proxy_settings::socks5_pw
 			&& m_proxy.type != proxy_settings::socks4)
 			return;
-		
+
 		if (m_socks_listen_socket) return;
 
 		m_socks_listen_socket = boost::shared_ptr<socket_type>(new socket_type(m_io_service));
@@ -2561,7 +2564,7 @@ retry:
 		TORRENT_ASSERT(is_network_thread());
 		boost::shared_ptr<socket_acceptor> listener = listen_socket.lock();
 		if (!listener) return;
-		
+
 		if (e == asio::error::operation_aborted) return;
 
 		if (m_abort) return;
@@ -2643,9 +2646,9 @@ retry:
 #ifdef TORRENT_USE_OPENSSL
 
 	// to test SSL connections, one can use this openssl command template:
-	// 
-	// openssl s_client -cert <client-cert>.pem -key <client-private-key>.pem \ 
-	//   -CAfile <torrent-cert>.pem  -debug -connect 127.0.0.1:4433 -tls1 \ 
+	//
+	// openssl s_client -cert <client-cert>.pem -key <client-private-key>.pem \
+	//   -CAfile <torrent-cert>.pem  -debug -connect 127.0.0.1:4433 -tls1 \
 	//   -servername <hex-encoded-info-hash>
 
 	void session_impl::ssl_handshake(error_code const& ec, boost::shared_ptr<socket_type> s)
@@ -2948,7 +2951,7 @@ retry:
 		std::pair<int, int> const& out_ports = m_settings.outgoing_ports;
 		if (m_next_port < out_ports.first || m_next_port > out_ports.second)
 			m_next_port = out_ports.first;
-	
+
 		int port = m_next_port;
 		++m_next_port;
 		if (m_next_port > out_ports.second) m_next_port = out_ports.first;
@@ -3256,7 +3259,7 @@ retry:
 
 		// some people claim that there sometimes can be cases where
 		// there is no torrent being checked, but there are torrents
-		// waiting to be checked. I have never seen this, and I can't 
+		// waiting to be checked. I have never seen this, and I can't
 		// see a way for it to happen. But, if it does, start one of
 		// the queued torrents
 		if (num_checking == 0 && num_queued > 0 && !m_paused)
@@ -3318,7 +3321,7 @@ retry:
 
 		m_peak_up_rate = (std::max)(m_stat.upload_rate(), m_peak_up_rate);
 		m_peak_down_rate = (std::max)(m_stat.download_rate(), m_peak_down_rate);
-	
+
 		m_stat.second_tick(tick_interval_ms);
 
 		TORRENT_ASSERT(least_recently_scraped == m_torrents.end()
@@ -3399,8 +3402,14 @@ retry:
 		// unchoke set calculations
 		// --------------------------------------------------------------
 		m_unchoke_time_scaler--;
+#if defined TORRENT_VERBOSE_LOGGING || defined TORRENT_LOGGING || defined TORRENT_ERROR_LOGGING
+                    (*m_logger) << time_now_string() << " [recalculate_unchoke_slots] " << " timer--: " << m_unchoke_time_scaler << "\n";
+#endif
 		if (m_unchoke_time_scaler <= 0 && !m_connections.empty())
 		{
+#if defined TORRENT_VERBOSE_LOGGING || defined TORRENT_LOGGING || defined TORRENT_ERROR_LOGGING
+                    (*m_logger) << time_now_string() << " [recalculate_unchoke_slots] " << " timer: " << m_unchoke_time_scaler << " m_connections.empty: " << m_connections.empty() << "\n";
+#endif
 			m_unchoke_time_scaler = settings().unchoke_interval;
 			recalculate_unchoke_slots(congested_torrents
 				, uncongested_torrents);
@@ -3433,7 +3442,7 @@ retry:
 				torrent_map::iterator i = std::max_element(m_torrents.begin(), m_torrents.end()
 					, boost::bind(&torrent::num_peers, boost::bind(&torrent_map::value_type::second, _1))
 					< boost::bind(&torrent::num_peers, boost::bind(&torrent_map::value_type::second, _2)));
-			
+
 				TORRENT_ASSERT(i != m_torrents.end());
 				int peers_to_disconnect = (std::min)((std::max)(
 					int(i->second->num_peers() * m_settings.peer_turnover), 1)
@@ -3466,7 +3475,7 @@ retry:
 	}
 
 #ifdef TORRENT_STATS
-		
+
 	void session_impl::enable_stats_logging(bool s)
 	{
 		if (m_stats_logging_enabled == s) return;
@@ -3654,7 +3663,7 @@ retry:
 				++peers_up_requests;
 			if (p->endgame()) ++num_end_game_peers;
 			reading_bytes += p->num_reading_bytes();
-		
+
 			pending_incoming_reqs += int(p->upload_queue().size());
 
 			int dl_bucket = 0;
@@ -4117,7 +4126,7 @@ retry:
 			// if we count slow torrents, every torrent
 			// is considered active
 			if (!s.dont_count_slow_torrents) return true;
-			
+
 			// if the torrent started less than 2 minutes
 			// ago (default), let it count as active since
 			// the rates are probably not accurate yet
@@ -4127,7 +4136,7 @@ retry:
 				|| t->statistics().download_payload_rate() != 0.f;
 		}
 	}
-	
+
 	void session_impl::auto_manage_torrents(std::vector<torrent*>& list
 		, int& dht_limit, int& tracker_limit, int& lsd_limit
 		, int& hard_limit, int type_limit)
@@ -4202,7 +4211,7 @@ retry:
 			num_seeds = (std::numeric_limits<int>::max)();
 		if (hard_limit == -1)
 			hard_limit = (std::numeric_limits<int>::max)();
-            
+
 		for (torrent_map::iterator i = m_torrents.begin()
 			, end(m_torrents.end()); i != end; ++i)
 		{
@@ -4279,7 +4288,7 @@ retry:
 	{
 		TORRENT_ASSERT(is_network_thread());
 		if (m_allowed_upload_slots == 0) return;
-	
+
 		std::vector<policy::peer*> opt_unchoke;
 
 		for (connection_map::iterator i = m_connections.begin()
@@ -4342,7 +4351,11 @@ retry:
 					bool ret = t->unchoke_peer(*pi->connection, true);
 					if (ret)
 					{
+#if defined TORRENT_VERBOSE_LOGGING || defined TORRENT_LOGGING || defined TORRENT_ERROR_LOGGING
+                            (*m_logger) << time_now_string() << " [peer_idol]" << " opt unchoked peer: " << pi->connection->remote() << "\n";
+#endif
 						pi->optimistically_unchoked = true;
+                                                pi->connection->no_of_consecutive_unchokes = 0;
 						++m_num_unchoked;
 						pi->last_optimistically_unchoked = session_time();
 					}
@@ -4361,7 +4374,7 @@ retry:
 					pi->optimistically_unchoked = false;
 					t->choke_peer(*pi->connection);
 					--m_num_unchoked;
-				}	
+				}
 			}
 		}
 	}
@@ -4602,6 +4615,18 @@ retry:
 			++m_allowed_upload_slots;
 		}
 
+                int z = 0;
+		for (std::vector<peer_connection*>::iterator i = peers.begin()
+			, end(peers.end()); i != end; ++i)
+		{
+                    peer_connection* p = *i;
+
+#if defined TORRENT_VERBOSE_LOGGING || defined TORRENT_LOGGING || defined TORRENT_ERROR_LOGGING
+                    (*m_logger) << time_now_string() << " [peer_idol] before choke_order " << z << ": " << p->remote() << " votes: " << p->votes << "\n";
+                    z++;
+#endif
+                }
+
 		if (m_settings.choking_algorithm == session_settings::bittyrant_choker)
 		{
 			// if we're using the bittyrant choker, sort peers by their return
@@ -4619,12 +4644,23 @@ retry:
 				, boost::bind(&peer_connection::unchoke_compare, _1, _2));
 		}
 
+                int y = 0;
+		for (std::vector<peer_connection*>::iterator i = peers.begin()
+			, end(peers.end()); i != end; ++i)
+		{
+                    peer_connection* p = *i;
+#if defined TORRENT_VERBOSE_LOGGING || defined TORRENT_LOGGING || defined TORRENT_ERROR_LOGGING
+                    (*m_logger) << time_now_string() << " [peer_idol] after choke_order " << y << ": " << p->remote() << " votes: " << p->votes << "\n";
+                    y++;
+#endif
+                }
+
 		// auto unchoke
 		int upload_limit = m_bandwidth_channel[peer_connection::upload_channel]->throttle();
 		if (m_settings.choking_algorithm == session_settings::auto_expand_choker
 			&& upload_limit > 0)
 		{
-			// if our current upload rate is less than 90% of our 
+			// if our current upload rate is less than 90% of our
 			// limit AND most torrents are not "congested", i.e.
 			// they are not holding back because of a per-torrent
 			// limit
@@ -4642,9 +4678,15 @@ retry:
 				--m_allowed_upload_slots;
 			}
 		}
-
+#if defined TORRENT_VERBOSE_LOGGING || defined TORRENT_LOGGING || defined TORRENT_ERROR_LOGGING
+                (*m_logger) << time_now_string() << " [peer_idol] unchoke slots " << m_allowed_upload_slots << "\n";
+#endif
 		int num_opt_unchoke = m_settings.num_optimistic_unchoke_slots;
 		if (num_opt_unchoke == 0) num_opt_unchoke = (std::max)(1, m_allowed_upload_slots / 5);
+
+                #if defined TORRENT_VERBOSE_LOGGING || defined TORRENT_LOGGING || defined TORRENT_ERROR_LOGGING
+                (*m_logger) << time_now_string() << " [peer_idol] unchoke optimistic slots " << num_opt_unchoke << "\n";
+#endif
 
 		// reserve some upload slots for optimistic unchokes
 		int unchoke_set_size = m_allowed_upload_slots - num_opt_unchoke;
@@ -4701,9 +4743,23 @@ retry:
 				// yes, this peer should be unchoked
 				if (p->is_choked())
 				{
-					if (!t->unchoke_peer(*p))
-						continue;
+                                    if (!t->unchoke_peer(*p)) {
+                                        p->votes = 0;
+                                        continue;
+                                    }
 				}
+                                else {
+#if defined TORRENT_VERBOSE_LOGGING || defined TORRENT_LOGGING || defined TORRENT_ERROR_LOGGING
+                                    (*m_logger) << time_now_string() << " [peer_idol] already unchoked: " << p->remote() << "\n";
+
+#endif
+                                    p->no_of_consecutive_unchokes++;
+                                    p->set_last_unchoke_time();
+                                }
+#if defined TORRENT_VERBOSE_LOGGING || defined TORRENT_LOGGING || defined TORRENT_ERROR_LOGGING
+                            (*m_logger) << time_now_string() << " [peer_idol]" << " unchoked peer: " << p->remote() << " votes: " << p->votes << "\n";
+#endif
+                                p->votes = 0;
 
 				--unchoke_set_size;
 				++m_num_unchoked;
@@ -4720,6 +4776,7 @@ retry:
 			}
 			else
 			{
+                                p->votes = 0;
 				// no, this peer should be shoked
 				TORRENT_ASSERT(p->peer_info_struct());
 				if (!p->is_choked() && !p->peer_info_struct()->optimistically_unchoked)
@@ -4828,9 +4885,9 @@ retry:
 	{
 		if (!m_logger) return;
 
-		va_list v;	
+		va_list v;
 		va_start(v, fmt);
-	
+
 		char usr[400];
 		vsnprintf(usr, sizeof(usr), fmt, v);
 		va_end(v);
@@ -4867,7 +4924,7 @@ retry:
 			t->status(&*i, flags);
 		}
 	}
-	
+
 	void session_impl::post_torrent_updates()
 	{
 		INVARIANT_CHECK;
@@ -4957,7 +5014,7 @@ retry:
 			return torrent_handle();
 		}
 
-#ifndef TORRENT_DISABLE_DHT	
+#ifndef TORRENT_DISABLE_DHT
 		// add p.dht_nodes to the DHT, if enabled
 		if (m_dht && !p.dht_nodes.empty())
 		{
@@ -4974,7 +5031,7 @@ retry:
 			ec = errors::session_is_closing;
 			return torrent_handle();
 		}
-		
+
 		// figure out the info hash of the torrent
 		sha1_hash const* ih = 0;
 		sha1_hash tmp;
@@ -5885,10 +5942,10 @@ retry:
 
 			int last_average = 0;
 			int average = m_settings.connections_limit / m_torrents.size();
-	
+
 			// the number of slots that are unused by torrents
 			int extra = m_settings.connections_limit % m_torrents.size();
-	
+
 			// run 3 iterations of this, then we're probably close enough
 			for (int iter = 0; iter < 4; ++iter)
 			{
@@ -5943,7 +6000,7 @@ retry:
 	{
 		return m_alerts.get();
 	}
-	
+
 	void session_impl::pop_alerts(std::deque<alert*>* alerts)
 	{
 		m_alerts.get_all(alerts);
@@ -5977,7 +6034,7 @@ retry:
 			, m_listen_interface.address()
 			, boost::bind(&session_impl::on_lsd_peer, this, _1, _2));
 	}
-	
+
 	natpmp* session_impl::start_natpmp()
 	{
 		INVARIANT_CHECK;
@@ -6048,14 +6105,14 @@ retry:
 			m_lsd->close();
 		m_lsd = 0;
 	}
-	
+
 	void session_impl::stop_natpmp()
 	{
 		if (m_natpmp.get())
 			m_natpmp->close();
 		m_natpmp = 0;
 	}
-	
+
 	void session_impl::stop_upnp()
 	{
 		if (m_upnp.get())
@@ -6069,7 +6126,7 @@ retry:
 		}
 		m_upnp = 0;
 	}
-	
+
 	bool session_impl::external_ip_t::add_vote(sha1_hash const& k, int type)
 	{
 		sources |= type;
@@ -6103,7 +6160,7 @@ retry:
 		{
 			// each IP only gets to add a new IP once
 			if (m_external_address_voters.find(k)) return;
-		
+
 			if (m_external_addresses.size() > 20)
 			{
 				if (random() < UINT_MAX / 2)
@@ -6137,7 +6194,7 @@ retry:
 		}
 		// add one more vote to this external IP
 		if (!i->add_vote(k, source_type)) return;
-		
+
 		i = std::max_element(m_external_addresses.begin(), m_external_addresses.end());
 		TORRENT_ASSERT(i != m_external_addresses.end());
 
@@ -6187,7 +6244,7 @@ retry:
 	{
 		return m_disk_thread.allocate_buffer(category);
 	}
-	
+
 	char* session_impl::allocate_buffer()
 	{
 		TORRENT_ASSERT(is_network_thread());
@@ -6242,7 +6299,7 @@ retry:
 #else
 		m_send_buffers.free(buf);
 #endif
-	}	
+	}
 
 #ifdef TORRENT_DEBUG
 	void session_impl::check_invariant() const
@@ -6349,4 +6406,3 @@ retry:
 #endif
 
 }}
-
