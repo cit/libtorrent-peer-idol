@@ -1,32 +1,32 @@
 /*
 
-Copyright (c) 2003-2012, Arvid Norberg
-All rights reserved.
+  Copyright (c) 2003-2012, Arvid Norberg
+  All rights reserved.
 
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions
-are met:
+  Redistribution and use in source and binary forms, with or without
+  modification, are permitted provided that the following conditions
+  are met:
 
-    * Redistributions of source code must retain the above copyright
-      notice, this list of conditions and the following disclaimer.
-    * Redistributions in binary form must reproduce the above copyright
-      notice, this list of conditions and the following disclaimer in
-      the documentation and/or other materials provided with the distribution.
-    * Neither the name of the author nor the names of its
-      contributors may be used to endorse or promote products derived
-      from this software without specific prior written permission.
+  * Redistributions of source code must retain the above copyright
+  notice, this list of conditions and the following disclaimer.
+  * Redistributions in binary form must reproduce the above copyright
+  notice, this list of conditions and the following disclaimer in
+  the documentation and/or other materials provided with the distribution.
+  * Neither the name of the author nor the names of its
+  contributors may be used to endorse or promote products derived
+  from this software without specific prior written permission.
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
-LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-POSSIBILITY OF SUCH DAMAGE.
+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+  POSSIBILITY OF SUCH DAMAGE.
 
 */
 
@@ -68,139 +68,140 @@ using libtorrent::aux::session_impl;
 
 namespace libtorrent
 {
-	int round_up8(int v)
-	{
-		return ((v & 7) == 0) ? v : v + (8 - (v & 7));
-	}
+    int round_up8(int v)
+    {
+        return ((v & 7) == 0) ? v : v + (8 - (v & 7));
+    }
 
 #if defined TORRENT_REQUEST_LOGGING
-	void write_request_log(FILE* f, sha1_hash const& ih
-		, peer_connection* p, peer_request const& r)
-	{
-		// the event format in the log is:
-		// uint64_t timestamp (microseconds)
-		// uint64_t info-hash prefix
-		// uint32_t peer identifier
-		// uint32_t piece
-		// uint32_t start offset
-		// uint32_t length
-		char event[32];
-		char* ptr = event;
-		detail::write_uint64(total_microseconds((time_now_hires() - min_time())), ptr);
-		memcpy(ptr, &ih[0], 8);
-		ptr += 8;
-		detail::write_uint32(boost::uint32_t(p), ptr);
-		detail::write_uint32(r.piece, ptr);
-		detail::write_uint32(r.start, ptr);
-		detail::write_uint32(r.length, ptr);
+    void write_request_log(FILE* f, sha1_hash const& ih
+                           , peer_connection* p, peer_request const& r)
+    {
+        // the event format in the log is:
+        // uint64_t timestamp (microseconds)
+        // uint64_t info-hash prefix
+        // uint32_t peer identifier
+        // uint32_t piece
+        // uint32_t start offset
+        // uint32_t length
+        char event[32];
+        char* ptr = event;
+        detail::write_uint64(total_microseconds((time_now_hires() - min_time())), ptr);
+        memcpy(ptr, &ih[0], 8);
+        ptr += 8;
+        detail::write_uint32(boost::uint32_t(p), ptr);
+        detail::write_uint32(r.piece, ptr);
+        detail::write_uint32(r.start, ptr);
+        detail::write_uint32(r.length, ptr);
 
-		int ret = fwrite(event, 1, sizeof(event), f);
-		if (ret != sizeof(event))
-		{
-			fprintf(stderr, "ERROR writing to request log: (%d) %s\n"
-				, errno, strerror(errno));
-		}
-	}
+        int ret = fwrite(event, 1, sizeof(event), f);
+        if (ret != sizeof(event))
+        {
+            fprintf(stderr, "ERROR writing to request log: (%d) %s\n"
+                    , errno, strerror(errno));
+        }
+    }
 #endif
 
-	// outbound connection
-	peer_connection::peer_connection(
-		session_impl& ses
-		, boost::weak_ptr<torrent> tor
-		, shared_ptr<socket_type> s
-		, tcp::endpoint const& endp
-		, policy::peer* peerinfo
-		, bool outgoing)
-		:
+    // outbound connection
+    peer_connection::peer_connection(
+        session_impl& ses
+        , boost::weak_ptr<torrent> tor
+        , shared_ptr<socket_type> s
+        , tcp::endpoint const& endp
+        , policy::peer* peerinfo
+        , bool outgoing)
+        :
 #ifdef TORRENT_DEBUG
-		m_last_choke(time_now() - hours(1))
-		,
+        m_last_choke(time_now() - hours(1))
+        ,
 #endif
-	          m_ses(ses)
-		, m_max_out_request_queue(m_ses.settings().max_out_request_queue)
-		, m_work(ses.m_io_service)
-		, m_last_piece(time_now())
-		, m_last_request(time_now())
-		, m_last_incoming_request(min_time())
-		, m_last_unchoke(time_now())
-		, m_last_unchoked(time_now())
-		, m_last_receive(time_now())
-		, m_last_sent(time_now())
-		, m_requested(min_time())
-		, m_remote_dl_update(time_now())
-		, m_connect(time_now())
-		, m_became_uninterested(time_now())
-		, m_became_uninteresting(time_now())
-		, m_free_upload(0)
+        m_ses(ses)
+        , m_max_out_request_queue(m_ses.settings().max_out_request_queue)
+        , m_work(ses.m_io_service)
+        , m_last_piece(time_now())
+        , m_last_request(time_now())
+        , m_last_incoming_request(min_time())
+        , m_last_unchoke(time_now())
+        , m_last_unchoked(time_now())
+        , m_last_receive(time_now())
+        , m_last_sent(time_now())
+        , m_requested(min_time())
+        , m_remote_dl_update(time_now())
+        , m_connect(time_now())
+        , m_became_uninterested(time_now())
+        , m_became_uninteresting(time_now())
+        , m_free_upload(0)
         , m_downloaded_at_last_round(0)
         , m_uploaded_at_last_round(0)
-		, m_uploaded_at_last_unchoke(0)
-		, m_disk_recv_buffer(ses, 0)
-		, m_socket(s)
-		, m_remote(endp)
-		, m_torrent(tor)
-		, m_receiving_block(piece_block::invalid)
-		, m_last_seen_complete(0)
-		, m_timeout_extend(0)
-		, m_outstanding_bytes(0)
-		, m_extension_outstanding_bytes(0)
-		, m_queued_time_critical(0)
-		, m_num_pieces(0)
-		, m_timeout(m_ses.settings().peer_timeout)
-		, m_packet_size(0)
-		, m_soft_packet_size(0)
-		, m_recv_pos(0)
-		, m_disk_recv_buffer_size(0)
-		, m_reading_bytes(0)
-		, m_num_invalid_requests(0)
-		, m_priority(1)
-		, m_upload_limit(0)
-		, m_download_limit(0)
-		, m_peer_info(peerinfo)
-		, m_speed(slow)
-		, m_connection_ticket(-1)
-		, m_remote_bytes_dled(0)
-		, m_remote_dl_rate(0)
-		, m_outstanding_writing_bytes(0)
-		, m_download_rate_peak(0)
-		, m_upload_rate_peak(0)
-		, m_rtt(0)
-		, m_prefer_whole_pieces(0)
-		, m_desired_queue_size(2)
-		, m_choke_rejects(0)
-		, m_fast_reconnect(false)
-		, m_outgoing(outgoing)
-		, m_received_listen_port(false)
-		, m_peer_interested(false)
-		, m_peer_choked(true)
-		, m_interesting(false)
-		, m_choked(true)
-		, m_failed(false)
-		, m_ignore_bandwidth_limits(false)
-		, m_ignore_unchoke_slots(false)
-		, m_have_all(false)
-		, m_disconnecting(false)
-		, m_connecting(outgoing)
-		, m_queued(outgoing)
-		, m_request_large_blocks(false)
-		, m_share_mode(false)
-		, m_upload_only(false)
-		, m_snubbed(false)
-		, m_bitfield_received(false)
-		, m_no_download(false)
-		, m_endgame_mode(false)
-		, m_sent_suggests(false)
-		, m_holepunch_mode(false)
-		, m_ignore_stats(false)
-		, m_corked(false)
-		, m_has_metadata(true)
-                , votes(0)
+        , m_uploaded_at_last_unchoke(0)
+        , m_disk_recv_buffer(ses, 0)
+        , m_socket(s)
+        , m_remote(endp)
+        , m_torrent(tor)
+        , m_receiving_block(piece_block::invalid)
+        , m_last_seen_complete(0)
+        , m_timeout_extend(0)
+        , m_outstanding_bytes(0)
+        , m_extension_outstanding_bytes(0)
+        , m_queued_time_critical(0)
+        , m_num_pieces(0)
+        , m_timeout(m_ses.settings().peer_timeout)
+        , m_packet_size(0)
+        , m_soft_packet_size(0)
+        , m_recv_pos(0)
+        , m_disk_recv_buffer_size(0)
+        , m_reading_bytes(0)
+        , m_num_invalid_requests(0)
+        , m_priority(1)
+        , m_upload_limit(0)
+        , m_download_limit(0)
+        , m_peer_info(peerinfo)
+        , m_speed(slow)
+        , m_connection_ticket(-1)
+        , m_remote_bytes_dled(0)
+        , m_remote_dl_rate(0)
+        , m_outstanding_writing_bytes(0)
+        , m_download_rate_peak(0)
+        , m_upload_rate_peak(0)
+        , m_rtt(0)
+        , m_prefer_whole_pieces(0)
+        , m_desired_queue_size(2)
+        , m_choke_rejects(0)
+        , m_fast_reconnect(false)
+        , m_outgoing(outgoing)
+        , m_received_listen_port(false)
+        , m_peer_interested(false)
+        , m_peer_choked(true)
+        , m_interesting(false)
+        , m_choked(true)
+        , m_failed(false)
+        , m_ignore_bandwidth_limits(false)
+        , m_ignore_unchoke_slots(false)
+        , m_have_all(false)
+        , m_disconnecting(false)
+        , m_connecting(outgoing)
+        , m_queued(outgoing)
+        , m_request_large_blocks(false)
+        , m_share_mode(false)
+        , m_upload_only(false)
+        , m_snubbed(false)
+        , m_bitfield_received(false)
+        , m_no_download(false)
+        , m_endgame_mode(false)
+        , m_sent_suggests(false)
+        , m_holepunch_mode(false)
+        , m_ignore_stats(false)
+        , m_corked(false)
+        , m_has_metadata(true)
+        , no_of_consecutive_unchokes(0)
+        , votes(0)
 #if defined TORRENT_DEBUG || TORRENT_RELEASE_ASSERTS
-		, m_in_constructor(true)
-		, m_disconnect_started(false)
-		, m_initialized(false)
-		, m_in_use(1337)
-		, m_received_in_piece(0)
+        , m_in_constructor(true)
+        , m_disconnect_started(false)
+        , m_initialized(false)
+        , m_in_use(1337)
+        , m_received_in_piece(0)
 #endif
 	{
 		m_superseed_piece[0] = -1;
@@ -348,8 +349,8 @@ namespace libtorrent
 
 	bool peer_connection::unchoke_compare(boost::intrusive_ptr<peer_connection const> const& p) const
 	{
-		TORRENT_ASSERT(p);
-		peer_connection const& rhs = *p;
+            TORRENT_ASSERT(p);
+            peer_connection const& rhs = *p;
 
             // if one peer belongs to a higher priority torrent than the other one
             // that one should be unchoked.
@@ -410,19 +411,24 @@ namespace libtorrent
             else {
 
 		if (m_ses.settings().seed_choking_algorithm == session_settings::peer_idol) {
+
 #if defined TORRENT_VERBOSE_LOGGING
                     (*m_ses.m_logger) << time_now_string() << " " << "[seed_choking_algorithm] peer_idol \n";
-#endif
-#if defined TORRENT_VERBOSE_LOGGING
-                    (*m_ses.m_logger) << time_now_string() << " " << "[peer_idol] unchoke_compare " << votes << " vs " << rhs.votes <<"\n";
+                    (*m_ses.m_logger) << time_now_string() << " " << "[peer_idol] unchoke_compare " << remote() << " "<< votes << " vs " << rhs.remote() << " "<< rhs.votes <<"\n";
 #endif
 
-                 if (votes != rhs.votes)
+                    // avoid fibrilation
+                    int ranking[] = {0, 10, -1, 0, 0, 0, 0, 0, 0};
+                    if (no_of_consecutive_unchokes != rhs.no_of_consecutive_unchokes) {
+                        return ranking[no_of_consecutive_unchokes] > ranking[rhs.no_of_consecutive_unchokes];
+                    }
+
+                    if (votes != rhs.votes)
                         return votes > rhs.votes;
 
-                 // if both peers have are still in their send quota or not in their send quota
-		// prioritize the one that has waited the longest to be unchoked
-		return m_last_unchoke < rhs.m_last_unchoke;
+                    // if both peers have are still in their send quota or not in their send quota
+                    // prioritize the one that has waited the longest to be unchoked
+                    return m_last_unchoke < rhs.m_last_unchoke;
 
                 }
                 else if (m_ses.settings().seed_choking_algorithm == session_settings::round_robin) {
@@ -527,9 +533,15 @@ namespace libtorrent
 		}
 		else if (m_ses.settings().seed_choking_algorithm == session_settings::longest_wait) {
 #if defined TORRENT_VERBOSE_LOGGING
-                    (*m_ses.m_logger) << time_now_string() << " " << "[seed_choking_algorithm] longest_wait, " << remote() << "(" << m_last_unchoke.time << ")"
-                                      << " vs " << rhs.remote() << "(" << rhs.m_last_unchoke.time << ")\n";
+                    (*m_ses.m_logger) << time_now_string() << " " << "[seed_choking_algorithm] longest_wait, " << remote() << "(" << m_last_unchoke.time << ") " << no_of_consecutive_unchokes
+                                      << " vs " << rhs.remote() << "(" << rhs.m_last_unchoke.time << " " << rhs.no_of_consecutive_unchokes <<")\n";
 #endif
+                    int ranking[] = {0, 10, -1, 0, 0, 0, 0, 0, 0};
+
+                    if (no_of_consecutive_unchokes != rhs.no_of_consecutive_unchokes) {
+                        return foo[no_of_consecutive_unchokes] > foo[rhs.no_of_consecutive_unchokes];
+                    }
+
                     // if both peers have are still in their send quota or not in their send quota
                     // prioritize the one that has waited the longest to be unchoked
                     return m_last_unchoke < rhs.m_last_unchoke;
@@ -557,7 +569,12 @@ namespace libtorrent
 		return c1 > c2;
 	}
 
-	void peer_connection::reset_choke_counters()
+	void peer_connection::set_last_unchoke_time ()
+	{
+            m_last_unchoke = time_now();
+	}
+
+	void peer_connection::reset_choke_counters ()
 	{
 		m_downloaded_at_last_round= m_statistics.total_payload_download();
 		m_uploaded_at_last_round = m_statistics.total_payload_upload();
@@ -2084,12 +2101,14 @@ namespace libtorrent
 				write_reject_request(r);
 				++m_choke_rejects;
 
-				if (m_choke_rejects > m_ses.settings().max_rejects)
-				{
-					disconnect(errors::too_many_requests_when_choked, 2);
-					return;
-				}
-				else if ((m_choke_rejects & 0xf) == 0)
+                                // PEER IDOL (FAST ATTACK)
+				// if (m_choke_rejects > m_ses.settings().max_rejects)
+				// {
+				// 	disconnect(errors::too_many_requests_when_choked, 2);
+				// 	return;
+				// }
+				// else
+                                    if ((m_choke_rejects & 0xf) == 0)
 				{
 					// tell the peer it's choked again
 					// every 16 requests in a row
@@ -3127,6 +3146,7 @@ namespace libtorrent
 #endif
 		write_choke();
 		m_choked = true;
+                no_of_consecutive_unchokes = 0;
 
 #ifdef TORRENT_DEBUG
 		m_last_choke = time_now();
@@ -3180,13 +3200,28 @@ namespace libtorrent
 			m_sent_suggests = true;
 		}
 
+
 		m_last_unchoke = time_now();
+                no_of_consecutive_unchokes = 1;
+
+#if defined TORRENT_VERBOSE_LOGGING || defined TORRENT_LOGGING || defined TORRENT_ERROR_LOGGING
+                            (*m_logger) << time_now_string() << " [peer_idol] time " << remote() << " " << m_last_unchoke.time << "\n";
+#endif
+
+
 		write_unchoke();
 		m_choked = false;
+
+		m_uploaded_at_last_unchoke = m_statistics.total_payload_upload();
+
 
 #ifdef TORRENT_VERBOSE_LOGGING
 		peer_log("==> UNCHOKE");
 #endif
+
+
+                // peer idol: reset the votes counter
+                votes = 0;
 		return true;
 	}
 
